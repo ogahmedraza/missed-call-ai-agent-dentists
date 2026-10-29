@@ -1,0 +1,197 @@
+{
+  "name": "Missed Call AI Agent for Dentists (Free APIs)",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "missed-call",
+        "options": {}
+      },
+      "id": "bf42f556-c86f-47af-aa4c-63fc40b44b9a",
+      "name": "1. Missed Call Webhook (Trigger)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "notesInFlow": true,
+      "webhookId": "49f55d21-9a68-4d35-99a5-ec5cb5c79421",
+      "notes": "Triggers when a call is missed. Connect via MacroDroid (Android) or Twilio webhook."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v17.0/YOUR_PHONE_NUMBER_ID/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsappApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "messaging_product",
+              "value": "whatsapp"
+            },
+            {
+              "name": "to",
+              "value": "={{ $json.query.phone_number }}"
+            },
+            {
+              "name": "type",
+              "value": "text"
+            },
+            {
+              "name": "text",
+              "value": "{\"body\": \"Hi! This is the Dental Clinic. We just missed your call. How can we help you today? You can reply here to book an appointment instantly!\"}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6d9ea133-0507-4b2d-b56a-42b3e8ed603b",
+      "name": "2. Send Initial WhatsApp SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        304,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "path": "whatsapp-reply",
+        "options": {}
+      },
+      "id": "5819a37f-7f9c-403b-9a9f-584f0ee1238b",
+      "name": "3. WA Reply Webhook (Chat Trigger)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        304
+      ],
+      "notesInFlow": true,
+      "webhookId": "8527af18-34c4-4f35-9109-38bd866352d3",
+      "notes": "Receives the patient's reply via WhatsApp Cloud API."
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.body.entry[0].changes[0].value.messages[0].text.body }}",
+        "options": {
+          "systemMessage": "You are an AI assistant for a Dental Clinic. A patient missed a call and is now chatting on WhatsApp to book an appointment. Ask for their preferred time/date, answer basic questions, and use the Google Calendar tool to book the appointment. Keep responses short and friendly."
+        }
+      },
+      "id": "81fdfe39-c508-47f9-8d44-250ad4d24c4c",
+      "name": "4. AI Agent (Gemini Brain)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1,
+      "position": [
+        304,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash",
+        "options": {}
+      },
+      "id": "dce73fb4-3e55-4b74-a5d9-ca859c66398e",
+      "name": "Google Gemini Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        256,
+        560
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "8a16dd83-2e90-4c91-845e-593f5fd7ec59",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1,
+      "position": [
+        400,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "calendar": "primary",
+        "additionalFields": {}
+      },
+      "id": "522cfe00-afcd-40a6-9c0c-098fde0a1613",
+      "name": "Google Calendar Booking Tool",
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1,
+      "position": [
+        560,
+        560
+      ]
+    }
+  ],
+  "connections": {
+    "1. Missed Call Webhook (Trigger)": {
+      "main": [
+        [
+          {
+            "node": "2. Send Initial WhatsApp SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. WA Reply Webhook (Chat Trigger)": {
+      "main": [
+        [
+          {
+            "node": "4. AI Agent (Gemini Brain)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "4. AI Agent (Gemini Brain)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "4. AI Agent (Gemini Brain)",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Calendar Booking Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "4. AI Agent (Gemini Brain)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": null
+}
