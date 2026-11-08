@@ -15,7 +15,6 @@
         0
       ],
       "notesInFlow": true,
-      "webhookId": "49f55d21-9a68-4d35-99a5-ec5cb5c79421",
       "notes": "Triggers when a call is missed. Connect via MacroDroid (Android) or Twilio webhook."
     },
     {
@@ -70,7 +69,6 @@
         304
       ],
       "notesInFlow": true,
-      "webhookId": "8527af18-34c4-4f35-9109-38bd866352d3",
       "notes": "Receives the patient's reply via WhatsApp Cloud API."
     },
     {
